@@ -163,22 +163,22 @@ function zero() {
 		freeze = snow.getFirstExists(false);
 
 		if(freeze) {
-			if((player.frame == 0) || (player.frame == 1) || (player.frame == 2)) { //cima
+			if((player.animations.currentFrame.index == 0) || (player.animations.currentFrame.index == 1) || (player.animations.currentFrame.index == 2)) { //cima
 				freeze.reset(player.x, player.y-30);
 				freeze.body.velocity.x = 0;
 				freeze.body.velocity.y = -50;
 			}
-			else if((player.frame == 3) || (player.frame == 4) || (player.frame == 5)) { //direita
+			else if((player.animations.currentFrame.index == 3) || (player.animations.currentFrame.index == 4) || (player.animations.currentFrame.index == 5)) { //direita
 				freeze.reset(player.x+30, player.y);
 				freeze.body.velocity.x = 50;
 				freeze.body.velocity.y = 0;
 			}
-			else if((player.frame == 6) || (player.frame == 7) || (player.frame == 8)) { //baixo
+			else if((player.animations.currentFrame.index == 6) || (player.animations.currentFrame.index == 7) || (player.animations.currentFrame.index == 8)) { //baixo
 				freeze.reset(player.x, player.y+30);
 				freeze.body.velocity.x = 0;
 				freeze.body.velocity.y = 50;
 			}
-			else if((player.frame == 9) || (player.frame == 10) || (player.frame == 11)) { //esquerda
+			else if((player.animations.currentFrame.index == 9) || (player.animations.currentFrame.index == 10) || (player.animations.currentFrame.index == 11)) { //esquerda
 				freeze.reset(player.x-30, player.y);
 				freeze.body.velocity.x = -50;
 				freeze.body.velocity.y = 0;
