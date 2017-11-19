@@ -1,0 +1,28 @@
+{"frames": {
+
+"HydroPump01.png":
+{
+	"frame": {"x":0,"y":0,"w":77,"h":47},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":77,"h":47},
+	"sourceSize": {"w":77,"h":47}
+},
+"HydroPump02.png":
+{
+	"frame": {"x":77,"y":0,"w":77,"h":47},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":77,"h":47},
+	"sourceSize": {"w":77,"h":47}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "HydroPump.png",
+	"format": "RGBA8888",
+	"size": {"w":154,"h":47},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:561faf7bf8924932b07148aeca0bab94:19fefed508daf915516d01aeccf9648f:48521beac37b353b6931fedaf08d7169$"
+}
+}

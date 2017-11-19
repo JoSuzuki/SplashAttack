@@ -1,0 +1,36 @@
+{"frames": {
+
+"magikarp_left01.png":
+{
+	"frame": {"x":0,"y":0,"w":31,"h":28},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":31,"h":28},
+	"sourceSize": {"w":31,"h":28}
+},
+"magikarp_left02.png":
+{
+	"frame": {"x":31,"y":0,"w":31,"h":28},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":31,"h":28},
+	"sourceSize": {"w":31,"h":28}
+},
+"magikarp_left03.png":
+{
+	"frame": {"x":62,"y":0,"w":30,"h":28},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":30,"h":28},
+	"sourceSize": {"w":30,"h":28}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "Magi_left.png",
+	"format": "RGBA8888",
+	"size": {"w":92,"h":28},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:1251c1e1d9b38b3a4de12e40c917b477:e95fdce2039f88e373e36fba971c1136:5ae20804f1f0cda6891cd38c634ae264$"
+}
+}

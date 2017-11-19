@@ -1,0 +1,203 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+	<title>Testando</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var game = new Phaser.Game(1028, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update});
+
+var floor;
+var mob;
+var splash;
+var player;
+var magi;
+var karp;
+var red;
+
+var cursors;
+var w;
+var a;
+var s;
+var d;
+
+var snow;
+var freeze;
+var beam = 0;
+var shoot;
+
+function preload() {
+	game.load.image('umi', 'pics/ocean.png');
+	game.load.image('suna', 'pics/sand.jpg');
+	game.load.image('glacia', 'pics/freeze.png');
+	game.load.spritesheet('lapras', 'pics/shiny.png', 40, 40);
+	game.load.atlasJSONHash('peche', 'pics/Magi_left.png', 'pics/Magi_left.json');
+	game.load.atlasJSONHash('fish', 'pics/Magi_right.png', 'pics/Magi_right.json');
+}
+
+function create() {
+
+
+	// adding physics
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+
+	game.add.sprite(0, 0, 'umi');
+
+	floor = game.add.sprite(0, game.world.height - 64, 'suna');
+	floor.scale.setTo(4, 2);
+	game.physics.arcade.enable(floor);
+	floor.body.immovable = true;
+
+
+	player = game.add.sprite(50, 50, 'lapras');
+	game.physics.arcade.enable(player);
+	player.body.collideWorldBounds = true;
+
+	//animations
+	player.animations.add('hidari', [9, 10, 11], 10, true);
+	player.animations.add('migi', [3, 4, 5], 10, true);
+	player.animations.add('ue', [0, 1, 2], 10, true);
+	player.animations.add('shita', [6, 7, 8], 10, true);
+
+	cursors = game.input.keyboard.createCursorKeys();
+
+	red = game.add.group();
+
+	mob = red.create(game.world.width - 30, 0, 'peche', 'magikarp_left01.png');
+	mob.animations.add('swim', Phaser.Animation.generateFrameNames('magikarp_left', 1, 3, '.png', 2), 10, true, false);
+	mob.animations.play('swim');
+
+	splash = red.create(0, game.world.height - 100, 'fish', 'magikarp_right01.png');
+	splash.animations.add('nada', Phaser.Animation.generateFrameNames('magikarp_right', 1, 3, '.png', 2), 10, true, false);
+	splash.animations.play('nada');
+
+	w = game.input.keyboard.addKey(Phaser.Keyboard.W);
+	a = game.input.keyboard.addKey(Phaser.Keyboard.A);
+	s = game.input.keyboard.addKey(Phaser.Keyboard.S);
+	d = game.input.keyboard.addKey(Phaser.Keyboard.D);
+
+	shoot = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+	snow = game.add.group();
+	snow.enableBody = true;
+    snow.physicsBodyType = Phaser.Physics.ARCADE;
+	snow.createMultiple(30, 'glacia');
+	//snow.setAll('anchor.x', 0.5);
+    //snow.setAll('anchor.y', 1);
+	snow.setAll('outOfBoundsKill', true);
+	snow.setAll('checkWorldBounds', true);
+
+	game.add.text(0, 0, 'frame = '+player.animations.frame);
+
+}
+
+function update() {
+
+
+	game.physics.arcade.collide(player, floor);
+
+	if((cursors.left.isDown || a.isDown) || (cursors.right.isDown || d.isDown) || (cursors.up.isDown || w.isDown) || (cursors.down.isDown || s.isDown)) {
+		if(cursors.left.isDown || a.isDown) {
+			player.body.velocity.x = -150;
+			player.animations.play('hidari');
+		}
+	
+		else if(cursors.right.isDown || d.isDown) {
+			player.body.velocity.x = 150;
+			player.animations.play('migi');
+		}
+	
+		else {
+			player.body.velocity.x = 0;
+		}
+	
+		if(cursors.up.isDown || w.isDown) {
+			player.body.velocity.y = -150;
+			player.animations.play('ue');
+		}
+	
+		else if(cursors.down.isDown || s.isDown) {
+			player.body.velocity.y = 150;
+			player.animations.play('shita');
+		}
+	
+		else {
+			player.body.velocity.y = 0;
+		}
+	}
+
+	else {
+		player.body.velocity.x = 0;
+		player.body.velocity.y = 0;
+		player.animations.stop();
+	}
+
+	mob.x -= 3;
+	if(mob.x < -30) {
+		mob.x = game.world.width-30;
+	}
+
+	splash.x += 3;
+	if(splash.x > game.world.width + 30) {
+		splash.x = -30;
+	}
+
+	if(shoot.isDown) {
+		zero();
+	}
+
+}
+
+function zero() {
+	
+	if(game.time.now > beam) {
+		freeze = snow.getFirstExists(false);
+
+		if(freeze) {
+			if((player.frame == 0) || (player.frame == 1) || (player.frame == 2)) { //cima
+				freeze.reset(player.x, player.y-30);
+				freeze.body.velocity.x = 0;
+				freeze.body.velocity.y = -50;
+			}
+			else if((player.frame == 3) || (player.frame == 4) || (player.frame == 5)) { //direita
+				freeze.reset(player.x+30, player.y);
+				freeze.body.velocity.x = 50;
+				freeze.body.velocity.y = 0;
+			}
+			else if((player.frame == 6) || (player.frame == 7) || (player.frame == 8)) { //baixo
+				freeze.reset(player.x, player.y+30);
+				freeze.body.velocity.x = 0;
+				freeze.body.velocity.y = 50;
+			}
+			else if((player.frame == 9) || (player.frame == 10) || (player.frame == 11)) { //esquerda
+				freeze.reset(player.x-30, player.y);
+				freeze.body.velocity.x = -50;
+				freeze.body.velocity.y = 0;
+			}
+			
+			beam = game.time.now + 200;
+		}
+	}
+
+	
+
+}
+
+function resetFreeze(freeze) {
+	freeze.kill();
+}
+
+
+</script>
+
+</body>
+</html>
