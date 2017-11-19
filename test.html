@@ -161,27 +161,31 @@ function zero() {
 
 		if(freeze) {
 			if((player.animations.currentFrame.index == 0) || (player.animations.currentFrame.index == 1) || (player.animations.currentFrame.index == 2)) { //cima
-				freeze.reset(player.x, player.y-30);
+				freeze.reset(player.x+30, player.y);
+				freeze.angle = 180;
 				freeze.body.velocity.x = 0;
 				freeze.body.velocity.y = -50;
 			}
 			else if((player.animations.currentFrame.index == 3) || (player.animations.currentFrame.index == 4) || (player.animations.currentFrame.index == 5)) { //direita
-				freeze.reset(player.x+30, player.y);
+				freeze.reset(player.x+30, player.y+30);
+				freeze.angle = -90;
 				freeze.body.velocity.x = 50;
 				freeze.body.velocity.y = 0;
 			}
 			else if((player.animations.currentFrame.index == 6) || (player.animations.currentFrame.index == 7) || (player.animations.currentFrame.index == 8)) { //baixo
-				freeze.reset(player.x, player.y+30);
+				freeze.reset(player.x+3, player.y+30);
+				freeze.angle = 0;
 				freeze.body.velocity.x = 0;
 				freeze.body.velocity.y = 50;
 			}
 			else if((player.animations.currentFrame.index == 9) || (player.animations.currentFrame.index == 10) || (player.animations.currentFrame.index == 11)) { //esquerda
-				freeze.reset(player.x-30, player.y);
+				freeze.reset(player.x, player.y);
+				freeze.angle = 90;
 				freeze.body.velocity.x = -50;
 				freeze.body.velocity.y = 0;
 			}
 			
-			beam = game.time.now + 200;
+			beam = game.time.now + 750;
 		}
 	}
 
