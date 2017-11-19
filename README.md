@@ -1,2 +1,2 @@
 # SplashAttack
-A project to the discipline of PCS
+A project of a game called Splash Attack made for the discipline of PCS2510 - Hipermidia&Multimidia
