@@ -1,3 +1,4 @@
+//this is the client side js
 var socket; // define a global variable called socket
 socket = io.connect(); // send a connection request to the server
 console.log("send a connection request to the server");
@@ -11,9 +12,10 @@ canvas_height = window.innerHeight * window.devicePixelRatio;
 game = new Phaser.Game(canvas_width,canvas_height, Phaser.CANVAS,
  'gameDiv');
 
+//variaveis iniciais
 var enemies = [];
 var player_created = false;
-
+var player;
 
 var gameProperties = {
 	//this is the actual game size to determine the boundary of
@@ -24,17 +26,28 @@ var gameProperties = {
   in_game: false,
 };
 
-
 // this is the main game state
 var main = function(game){
 };
+
+//class remote_player
+var remote_player = function(id, startx, starty, startDirection){
+  //this is the unique socket id. We use it as a unique name for each enemy
+  this.id = id;
+  this.direction = startDirection;
+  this.player = game.add.sprite(startx, starty, 'lapras');
+  this.player.animations.add('left', [9, 10, 11], 10, true);
+	this.player.animations.add('right', [3, 4, 5], 10, true);
+	this.player.animations.add('up', [0, 1, 2], 10, true);
+	this.player.animations.add('down', [6, 7, 8], 10, true);
+}
 
 //call this function when the player connects to the server
 function onsocketConnected(){
   console.log("onsocketConnected called");
   createPlayer();
   gameProperties.in_game = true;
-  socket.emit('new_player', {x:50, y:50, angle:0});
+  socket.emit('new_player', {x:50, y:50, direction:"up"});
 }
 
 function onRemovePlayer(data){
@@ -53,46 +66,38 @@ function createPlayer(){
   player = game.add.sprite(50,50,'lapras');
   game.physics.arcade.enable(player);
   player.body.collideWorldBounds = true;
+  player.direction = "up";
   player.animations.add('left', [9, 10, 11], 10, true);
 	player.animations.add('right', [3, 4, 5], 10, true);
 	player.animations.add('up', [0, 1, 2], 10, true);
 	player.animations.add('down', [6, 7, 8], 10, true);
 }
 
-var remote_player = function(id, startx, starty, startAngle){
-  this.x = startx;
-  this.y = starty;
-  //this is the unique socket id. We use it as a unique name for each enemy
-  this.id = id;
-  this.angle = startAngle;
-  this.player = game.add.sprite(this.x, this.y, 'lapras');
-  this.player.animations.add('left', [9, 10, 11], 10, true);
-	this.player.animations.add('right', [3, 4, 5], 10, true);
-	this.player.animations.add('up', [0, 1, 2], 10, true);
-	this.player.animations.add('down', [6, 7, 8], 10, true);
-}
-
 function onNewPlayer(data) {
   console.log("new enemy id: "+data.id);
   console.log("new enemy x: "+data.x);
-  var new_enemy = new remote_player(data.id, data.x, data.y, data.angle);
+  var new_enemy = new remote_player(data.id, data.x, data.y, data.direction);
   enemies.push(new_enemy);
 }
 
 function onEnemyMove(data) {
-  //console.log(data.id);
-  //console.log(enemies);
-  console.log("id recebido: " + data.id);
-  console.log("x recebido: " + data.x);
   var movePlayer = findplayerbyid(data.id);
-  console.log("id moveplayer: " + movePlayer.id);
   if(!movePlayer){
     return;
   }
+  if (data.x == movePlayer.player.x && data.y == movePlayer.player.y){
+    movePlayer.player.animations.stop();
+  } else if (data.direction == "up") {
+    movePlayer.player.animations.play('up');
+  } else if (data.direction == "down"){
+    movePlayer.player.animations.play('down');
+  } else if (data.direction == "right"){
+    movePlayer.player.animations.play('right');
+  } else if (data.direction == "left"){
+    movePlayer.player.animations.play('left');
+  }
   movePlayer.player.x = data.x;
   movePlayer.player.y = data.y;
-  console.log("after moving: "+ movePlayer.x);
-
 }
 
 function findplayerbyid(id){
@@ -145,11 +150,13 @@ main.prototype = {
       if((cursors.left.isDown) || (cursors.right.isDown) || (cursors.up.isDown) || (cursors.down.isDown)) {
     		if(cursors.left.isDown) {
     			player.body.velocity.x = -150;
+          player.direction = "left";
     			player.animations.play('left');
     		}
 
     		else if(cursors.right.isDown) {
     			player.body.velocity.x = 150;
+          player.direction = "right";
     			player.animations.play('right');
     		}
 
@@ -159,11 +166,13 @@ main.prototype = {
 
     		if(cursors.up.isDown) {
     			player.body.velocity.y = -150;
+          player.direction = "up";
     			player.animations.play('up');
     		}
 
     		else if(cursors.down.isDown) {
     			player.body.velocity.y = 150;
+          player.direction = "down";
     			player.animations.play('down');
     		}
 
@@ -177,12 +186,11 @@ main.prototype = {
     		player.body.velocity.y = 0;
     		player.animations.stop();
     	}
-      socket.emit('move_player', {x: player.x, y: player.y, angle: player.angle});
+      socket.emit('move_player', {x: player.x, y: player.y, direction: player.direction});
     }
 
   }
 }
-
 
 // wrap the game states.
 var gameBootstrapper = {

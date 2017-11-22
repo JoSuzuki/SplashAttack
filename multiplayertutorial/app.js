@@ -1,3 +1,4 @@
+//this is the server side js
 //import express.js
 var express = require('express');
 //assign it to variable app
@@ -22,6 +23,7 @@ console.log("Server started.");
 
 var player_lst = [];
 
+//creates class player
 var Player = function(startX, startY, startAngle){
   this.x = startX
   this.y = startY
@@ -29,54 +31,50 @@ var Player = function(startX, startY, startAngle){
 }
 
 function onNewPlayer(data) {
-  var newPlayer = new Player(data.x, data.y, data.angle);
+  var newPlayer = new Player(data.x, data.y, data.direction);
   console.log("Created new player with id " + this.id);
 	newPlayer.id = this.id;
 	console.log("newPlayer.id = " + newPlayer.id);
 
-	var current_info = {
+	var new_player_info = {
 		id: newPlayer.id,
 		x: newPlayer.x,
 		y: newPlayer.y,
-		angle: newPlayer.angle,
+		direction: newPlayer.direction,
 	};
 
 	// send to the new player about everyone who is already connected
 	for (i = 0; i < player_lst.length; i++){
 		existingPlayer = player_lst[i];
-		var player_info = {
+		var existing_player_info = {
 			id: existingPlayer.id,
 			x: existingPlayer.x,
 			y: existingPlayer.y,
-			angle: existingPlayer.angle,
+			direction: existingPlayer.direction,
 		};
 		console.log("pushing player with id "+existingPlayer.id);
 		//send message to the sender-client only
-		this.emit("new_enemyPlayer", player_info);
+		this.emit("new_enemyPlayer", existing_player_info);
 	}
 
 	//send message to every connected client except the sender
-	this.broadcast.emit('new_enemyPlayer', current_info);
+	this.broadcast.emit('new_enemyPlayer', new_player_info);
 
 	player_lst.push(newPlayer);
 	//console.log("pushed newplayer, player_lst.length: "+player_lst.length);
-
 }
 
 function onMovePlayer(data){
 	var movePlayer = find_playerid(this.id);
-	//console.log("this id: " + this.id);
-	//console.log("broadcast id: " + movePlayer.id)
-	//console.log("broadcast de x: " + data.x);
 	movePlayer.x = data.x;
 	movePlayer.y = data.y;
-	movePlayer.angle = data.angle;
+	movePlayer.direction = data.direction;
 
 	var moveplayerData = {
 		id: movePlayer.id,
 		x: movePlayer.x,
 		y: movePlayer.y,
-		angle: movePlayer.angle
+		direction: movePlayer.direction
 	}
 	//send message to every connected cliente except the sender
 	this.broadcast.emit('enemy_move', moveplayerData);
