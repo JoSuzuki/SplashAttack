@@ -18,7 +18,7 @@ app.get('/',function(req, res) {
 app.use('/client',express.static(__dirname + '/client'));
 
 //listen on port 2000
-serv.listen(process.env.PORT || 2000, "0.0.0.0");
+serv.listen(process.env.PORT || 11155, "0.0.0.0");
 console.log("Server started.");
 
 var player_lst = [];
@@ -95,6 +95,17 @@ function onClientdisconnect(){
 	this.broadcast.emit('remove_player', {id:this.id});
 }
 
+function onShoot(data){
+	var enemy_shoot = {
+		x: data.x,
+		y: data.y,
+		x_velocity: data.x_velocity,
+		y_velocity: data.y_velocity
+	}
+
+	this.broadcast.emit('enemy_shoot', enemy_shoot);
+}
+
 function find_playerid(id) {
 	//console.log("player_lst.lenght: "+ player_lst.length);
 	//console.log("player_lst: "+player_lst);
@@ -125,5 +136,7 @@ io.sockets.on('connection', function(socket){
 	socket.on("move_player", onMovePlayer);
 
   socket.on("new_player", onNewPlayer);
+
+	socket.on("shoot", onShoot);
 
 });

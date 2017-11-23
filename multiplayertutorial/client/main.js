@@ -16,12 +16,18 @@ game = new Phaser.Game(canvas_width,canvas_height, Phaser.CANVAS,
 var enemies = [];
 var player_created = false;
 var player;
+var beam;
+var cursors;
+var spacebar;
+var beamGroup;
+
+
 
 var gameProperties = {
 	//this is the actual game size to determine the boundary of
 	//the world
-	gameWidth: 4000,
-	gameHeight: 4000,
+	gameWidth: 1000,
+	gameHeight: 1000,
   game_elemnt: "gameDiv",
   in_game: false,
 };
@@ -45,9 +51,10 @@ var remote_player = function(id, startx, starty, startDirection){
 //call this function when the player connects to the server
 function onsocketConnected(){
   console.log("onsocketConnected called");
-  createPlayer();
+  player = new main_player();
   gameProperties.in_game = true;
   socket.emit('new_player', {x:50, y:50, direction:"up"});
+  spacebar.onDown.add(shoot, {x: 1});
 }
 
 function onRemovePlayer(data){
@@ -62,15 +69,15 @@ function onRemovePlayer(data){
 
 }
 
-function createPlayer(){
-  player = game.add.sprite(50,50,'lapras');
-  game.physics.arcade.enable(player);
-  player.body.collideWorldBounds = true;
-  player.direction = "up";
-  player.animations.add('left', [9, 10, 11], 10, true);
-	player.animations.add('right', [3, 4, 5], 10, true);
-	player.animations.add('up', [0, 1, 2], 10, true);
-	player.animations.add('down', [6, 7, 8], 10, true);
+var main_player = function(){
+  this.direction = "up";
+  this.sprite = game.add.sprite(50,50,'lapras');
+  game.physics.arcade.enable(this.sprite);
+  this.sprite.body.collideWorldBounds = true;
+  this.sprite.animations.add('left', [9, 10, 11], 10, true);
+	this.sprite.animations.add('right', [3, 4, 5], 10, true);
+	this.sprite.animations.add('up', [0, 1, 2], 10, true);
+	this.sprite.animations.add('down', [6, 7, 8], 10, true);
 }
 
 function onNewPlayer(data) {
@@ -108,12 +115,68 @@ function findplayerbyid(id){
   }
 }
 
+function enemy_shoot(data){
+  enemy_beam = enemyBeamGroup.getFirstExists(false);
+  if (enemy_beam != null){
+    enemy_beam.reset(data.x, data.y);
+    enemy_beam.body.velocity.x = data.x_velocity;
+    enemy_beam.body.velocity.y = data.y_velocity;
+  }
+}
+
+function shoot(){
+  //console.log(main_player);
+  beam = beamGroup.getFirstExists(false); // returns the first nonexistant element, returns null otherwise
+  if (beam != null){
+    var x;
+    var y;
+    var x_velocity;
+    var y_velocity;
+    if (player.direction == "up"){
+      x = player.sprite.x + 15;
+      y = player.sprite.y;
+      x_velocity = 0;
+      y_velocity = -250
+      beam.reset(x, y);
+      beam.body.velocity.y = y_velocity;
+    } else if (player.direction == "down"){
+      x = player.sprite.x + 10;
+      y = player.sprite.y + 30;
+      x_velocity = 0;
+      y_velocity = 250
+      beam.reset(x, y);
+      beam.body.velocity.y = y_velocity;
+    } else if (player.direction == "left"){
+      x = player.sprite.x;
+      y = player.sprite.y + 10;
+      x_velocity = -250;
+      y_velocity = 0;
+      beam.reset(x, y);
+      beam.body.velocity.x = -250;
+    } else {
+      x = player.sprite.x + 30;
+      y = player.sprite.y + 10;
+      x_velocity = 250;
+      y_velocity = 0;
+      beam.reset(x, y);
+      beam.body.velocity.x = 250;
+    }
+    socket.emit('shoot', {x: x, y: y, x_velocity: x_velocity, y_velocity: y_velocity});
+  }
+}
+
+function kill(enemy, shoot){
+  enemy.kill();
+  shoot.kill();
+
+}
 
 // add the
 main.prototype = {
 	preload: function() {
     game.stage.disableVisibilityChange = true;
-    game.load.spritesheet('lapras', 'client/assets/shiny.png', 40, 40);
+    game.load.image('beam', 'client/assets/beam.png');
+    game.load.spritesheet('lapras', 'client/assets/lapras.png', 40, 40);
     game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
     game.world.setBounds(0, 0, gameProperties.gameWidth,
       gameProperties.gameHeight, false, false, false, false);
@@ -122,6 +185,23 @@ main.prototype = {
   },
 	//this function is fired once when we load the game
 	create: function () {
+    cursors = game.input.keyboard.createCursorKeys();
+    spacebar = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    beamGroup = game.add.group();
+    beamGroup.enableBody = true;
+    beamGroup.physicsBodyType = Phaser.Physics.ARCADE;
+    beamGroup.createMultiple(5, 'beam');
+    beamGroup.setAll('outOfBoundsKill', true);
+    beamGroup.setAll('checkWorldBounds', true);
+    enemyBeamGroup = game.add.group();
+    enemyBeamGroup.enableBody = true;
+    enemyBeamGroup.physicsBodyType = Phaser.Physics.ARCADE;
+    enemyBeamGroup.createMultiple(50, 'beam');
+    enemyBeamGroup.setAll('outOfBoundsKill', true);
+    enemyBeamGroup.setAll('checkWorldBounds', true);
+
+
+
     game.stage.backgroundColor = 0xE1A193;
 		console.log("client started");
 		//listen to the “connect” message from the server. The server
@@ -136,6 +216,8 @@ main.prototype = {
 
     socket.on("remove_player", onRemovePlayer);
 
+    socket.on("enemy_shoot", enemy_shoot);
+
 
 	},
   update: function() {
@@ -146,47 +228,51 @@ main.prototype = {
     }
 
     if(gameProperties.in_game){
-      var cursors = game.input.keyboard.createCursorKeys();
       if((cursors.left.isDown) || (cursors.right.isDown) || (cursors.up.isDown) || (cursors.down.isDown)) {
     		if(cursors.left.isDown) {
-    			player.body.velocity.x = -150;
+    			player.sprite.body.velocity.x = -150;
           player.direction = "left";
-    			player.animations.play('left');
+    			player.sprite.animations.play('left');
     		}
 
     		else if(cursors.right.isDown) {
-    			player.body.velocity.x = 150;
+    			player.sprite.body.velocity.x = 150;
           player.direction = "right";
-    			player.animations.play('right');
+    			player.sprite.animations.play('right');
     		}
 
     		else {
-    			player.body.velocity.x = 0;
+    			player.sprite.body.velocity.x = 0;
     		}
 
     		if(cursors.up.isDown) {
-    			player.body.velocity.y = -150;
+    			player.sprite.body.velocity.y = -150;
           player.direction = "up";
-    			player.animations.play('up');
+    			player.sprite.animations.play('up');
     		}
 
     		else if(cursors.down.isDown) {
-    			player.body.velocity.y = 150;
+    			player.sprite.body.velocity.y = 150;
           player.direction = "down";
-    			player.animations.play('down');
+    			player.sprite.animations.play('down');
     		}
 
     		else {
-    			player.body.velocity.y = 0;
+    			player.sprite.body.velocity.y = 0;
     		}
     	}
 
     	else {
-    		player.body.velocity.x = 0;
-    		player.body.velocity.y = 0;
-    		player.animations.stop();
+    		player.sprite.body.velocity.x = 0;
+    		player.sprite.body.velocity.y = 0;
+    		player.sprite.animations.stop();
     	}
-      socket.emit('move_player', {x: player.x, y: player.y, direction: player.direction});
+      /*if(spacebar.onDown){
+        console.log(spacebar.onDown);
+        shoot();
+      }*/
+      //game.physics.arcade.overlap(enemies[0].player, beamGroup, kill, null, this);
+      socket.emit('move_player', {x: player.sprite.x, y: player.sprite.y, direction: player.direction});
     }
 
   }
