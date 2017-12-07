@@ -2,6 +2,10 @@ var game = new Phaser.Game(600, 400, Phaser.AUTO, '', { preload: preload, create
 
 var floor;
 
+var wall;
+var horizontal = 30;
+var vertical = 19;
+
 var player;
 var cursors;
 
@@ -9,6 +13,12 @@ var municao;
 var bullet;
 var lim = 0;
 var shoot;
+
+var total;
+var p1 = 0;
+
+var tempo;
+var timer;
 
 function preload() {
 	game.load.image('shot', 'pics/shoot.png');
@@ -35,15 +45,14 @@ function create() {
     wall = game.add.group();
     wall.enableBody = true;
     wall.physicsBodyType = Phaser.Physics.ARCADE;
-    wall.createMultiple(570, 'wall');
-    wall.getFirstExists(false, false, 300, 50);
     
+    borderline(wall);
+
 
 
 	player = game.add.sprite(50, 50, 'lapras');
 	game.physics.arcade.enable(player);
 	player.body.collideWorldBounds = true;
-
 
 	//animations
 	player.animations.add('left', [9, 10, 11], 10, true);
@@ -67,10 +76,24 @@ function create() {
 
 	game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1);
 
+	//  Create our Timer
+    timer = game.time.create(false);
+
+    tempo = timer.add(Phaser.Timer.MINUTE * 3 + Phaser.Timer.SECOND * 00, dasEnde, this);
+
+    //  Set a TimerEvent to occur after 30 seconds
+    timer.loop(5000, updatePonto, this, floor);
+
+    //  Start the timer running - this is important!
+    //  It won't start automatically, allowing you to hook it to button events and the like.
+    timer.start();
+
 
 }
 
 function update() {
+
+	game.physics.arcade.collide(player, wall);
 
 	if((cursors.left.isDown) || (cursors.right.isDown) || (cursors.up.isDown) || (cursors.down.isDown)) {
 		
@@ -107,17 +130,20 @@ function update() {
 		player.body.velocity.x = 0;
 		player.body.velocity.y = 0;
 		player.animations.stop();	
+		
 	}
 
 	if(shoot.isDown) {
-		zero();
+		fire();
 	}
 
 	game.physics.arcade.overlap(floor, municao, Paint, null, this);
 	game.physics.arcade.overlap(wall, municao, DeadEnd, null, this);
+
+	
 }
 
-function zero() {
+function fire() {
 	
 	if(game.time.now > lim) {
 		bullet = municao.getFirstExists(false);
@@ -157,7 +183,18 @@ function zero() {
 }
 
 function render() {
-	game.debug.text('Num de chão: '+floor.total, 32, 32, 'rgb(255,255,255)');
+	total = floor.total-wall.total;
+	var porcentagem = p1/total*100;
+	if(timer.running) {
+		//game.debug.text('Time until event: ' + timer.duration.toFixed(0), 32, 32, 'rgb(255,255,255)');
+		game.debug.text(formatTime(Math.round((tempo.delay - timer.ms) / 1000)), 2, 14, 'rgb(255,255,255)');	
+	}
+	else {
+		game.debug.text('FINALE!', 32, 32, 'rgb(255,255,255)');
+	}
+	
+	game.debug.text('Num de chão: '+ porcentagem+'%', 64, 64, 'rgb(255,255,255)');
+	//game.debug.text('Num de chão: '+ (floor.total-wall.total), 32, 32, 'rgb(255,255,255)');
 }
 
 function resetbullet(bullet) {
@@ -165,7 +202,6 @@ function resetbullet(bullet) {
 }
 
 function Paint(floor, bullet) {
-	//bullet.kill();
 	floor.tint = bullet.tint;
 }
 
@@ -173,3 +209,40 @@ function DeadEnd(wall, bullet) {
 	bullet.kill();
 }
 
+function pontuacao(floor) {
+
+	if(floor.tint == 0xff6b99) {
+		p1 += 1; 
+	}
+}
+
+
+function borderline(wall) {
+	for (var i = 0; i < horizontal; i++) {
+		var block = wall.create(i*50, 0, 'wall');
+		block.body.immovable = true;
+		block = wall.create(i*50, game.world.height-50, 'wall');
+		block.body.immovable = true;
+	}
+	for (var i = 1; i < vertical-1; i++) {
+		var block = wall.create(0, i*50, 'wall');
+		block.body.immovable = true;
+		block = wall.create(game.world.width-50, i*50, 'wall');
+		block.body.immovable = true;
+	}
+}
+
+function updatePonto(floor) {
+	p1 = 0;
+	floor.forEach(pontuacao, this, true);
+}
+
+function dasEnde() {
+	timer.stop();
+}
+
+function formatTime(s) {
+	var minutes = "0" + Math.floor(s / 60);
+    var seconds = "0" + (s - minutes * 60);
+    return minutes.substr(-2) + ":" + seconds.substr(-2); 
+}
