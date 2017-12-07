@@ -242,25 +242,20 @@ function kill(enemy, beam){
   socket.emit('enemy_killed', {enemyId: findplayerbysprite(enemy).id, beam_id: beam_object.id, owner_id:beam_object.owner_id });
   //enemy.kill();
   beams_list.pop(findindexbeambysprite(beam));
-  enemiesGroup.remove(enemy, true);
+  //enemiesGroup.remove(enemy, true);
   beamGroup.remove(beam, true);
 }
 
 function enemy_kill(data){
-  console.log("tamanho do vetor de tiros:", beams_list.length);
   if (data.enemyId === player.id){
     player.sprite.reset(50,50);
-    console.log("dono da bala:", data.owner_id);
-    console.log("id da bala:", data.beam_id);
     findbeambyid(data.owner_id, data.beam_id).sprite.kill();
     beams_list.pop(findindexbeambysprite(findbeambyid(data.owner_id, data.beam_id).sprite));
-
   } else {
-    findplayerbyid(data.enemyId).player.kill();
+    //findplayerbyid(data.enemyId).player.kill();
     findbeambyid(data.owner_id, data.beam_id).sprite.kill();
     beams_list.pop(findindexbeambysprite(findbeambyid(data.owner_id, data.beam_id).sprite));
   }
-  console.log("tamanho do vetor de tiros depois:", beams_list.length);
 }
 
 // add the
