@@ -14,6 +14,8 @@ game = new Phaser.Game(canvas_width,canvas_height, Phaser.CANVAS,
 
 //variaveis iniciais
 var enemies = [];
+var beams_list = [];
+var enemiesGroup;
 var player_created = false;
 var player;
 var beam;
@@ -36,25 +38,58 @@ var gameProperties = {
 var main = function(game){
 };
 
+//class main_player
+var main_player = function(data){
+  this.id = data.id;
+  console.log("main player id: " + data.id);
+  this.direction = "up";
+  this.sprite = game.add.sprite(50,50,'lapras');
+  game.physics.arcade.enable(this.sprite);
+  this.sprite.body.collideWorldBounds = true;
+  this.sprite.animations.add('left', [9, 10, 11], 10, true);
+	this.sprite.animations.add('right', [3, 4, 5], 10, true);
+	this.sprite.animations.add('up', [0, 1, 2], 10, true);
+	this.sprite.animations.add('down', [6, 7, 8], 10, true);
+}
 //class remote_player
 var remote_player = function(id, startx, starty, startDirection){
   //this is the unique socket id. We use it as a unique name for each enemy
   this.id = id;
   this.direction = startDirection;
-  this.player = game.add.sprite(startx, starty, 'lapras');
+  this.player = enemiesGroup.create(startx, starty, 'lapras');
   this.player.animations.add('left', [9, 10, 11], 10, true);
 	this.player.animations.add('right', [3, 4, 5], 10, true);
 	this.player.animations.add('up', [0, 1, 2], 10, true);
 	this.player.animations.add('down', [6, 7, 8], 10, true);
 }
+//class beams
+var beams = function(owner_id){
+  if(beams.count == undefined){
+    beams.count = 1;
+  }
+  else{
+    beams.count ++;
+  }
+  this.id = beams.count;
+  this.owner_id = owner_id;
+  this.sprite = beamGroup.getFirstExists(false);
+}
+
+//class enemy_beams
+var enemy_beams = function(owner_id, beam_id){
+  this.id = beam_id;
+  this.owner_id = owner_id;
+  this.sprite = enemyBeamGroup.getFirstExists(false);
+}
 
 //call this function when the player connects to the server
-function onsocketConnected(){
+function onsocketConnected(data){
   console.log("onsocketConnected called");
-  player = new main_player();
+  player = new main_player(data);
   gameProperties.in_game = true;
   socket.emit('new_player', {x:50, y:50, direction:"up"});
   spacebar.onDown.add(shoot, {x: 1});
+  game.camera.follow(player.sprite);
 }
 
 function onRemovePlayer(data){
@@ -64,20 +99,9 @@ function onRemovePlayer(data){
     console.log('Player not found: ', data.id);
     return;
   }
-  removePlayer.player.destroy();
+  removePlayer.player.kill();
   enemies.splice(enemies.indexOf(removePlayer), 1);
 
-}
-
-var main_player = function(){
-  this.direction = "up";
-  this.sprite = game.add.sprite(50,50,'lapras');
-  game.physics.arcade.enable(this.sprite);
-  this.sprite.body.collideWorldBounds = true;
-  this.sprite.animations.add('left', [9, 10, 11], 10, true);
-	this.sprite.animations.add('right', [3, 4, 5], 10, true);
-	this.sprite.animations.add('up', [0, 1, 2], 10, true);
-	this.sprite.animations.add('down', [6, 7, 8], 10, true);
 }
 
 function onNewPlayer(data) {
@@ -115,19 +139,66 @@ function findplayerbyid(id){
   }
 }
 
+function findplayerbysprite(sprite){
+  for(var i = 0; i <enemies.length; i++){
+    if(enemies[i].player == sprite){
+      return enemies[i];
+    }
+  }
+}
+function findindexplayerbysprite(sprite){
+  for(var i = 0; i <enemies.length; i++){
+    if(enemies[i].player == sprite){
+      return i;
+    }
+  }
+}
+
+function findbeambysprite(sprite){
+  for(var i = 0; i <beams_list.length; i++){
+    if(beams_list[i].sprite == sprite){
+      return beams_list[i];
+    }
+  }
+}
+function findindexbeambysprite(sprite){
+  for(var i = 0; i <beams_list.length; i++){
+    if(beams_list[i].sprite == sprite){
+      return i;
+    }
+  }
+}
+
+function findbeambyid(owner_id, beam_id){
+  console.log("procurando pela bala")
+  for(var i = 0; i < beams_list.length; i++){
+    console.log("bala: ", i);
+    console.log("dono da bala:", beams_list[i].owner_id);
+    console.log("id da bala:", beams_list[i].id);
+    if(beams_list[i].owner_id == owner_id && beams_list[i].id == beam_id){
+      return beams_list[i];
+    }
+  }
+}
+
 function enemy_shoot(data){
-  enemy_beam = enemyBeamGroup.getFirstExists(false);
-  if (enemy_beam != null){
-    enemy_beam.reset(data.x, data.y);
-    enemy_beam.body.velocity.x = data.x_velocity;
-    enemy_beam.body.velocity.y = data.y_velocity;
+  enemy_beam = new enemy_beams(data.owner_id, data.beam_id);
+  console.log("Enemy beam id:", enemy_beam.id);
+  console.log("Enemy owner id:", enemy_beam.owner_id);
+  if (enemy_beam.sprite != null){
+    enemy_beam.sprite.reset(data.x, data.y);
+    enemy_beam.sprite.body.velocity.x = data.x_velocity;
+    enemy_beam.sprite.body.velocity.y = data.y_velocity;
+    beams_list.push(enemy_beam);
   }
 }
 
 function shoot(){
   //console.log(main_player);
-  beam = beamGroup.getFirstExists(false); // returns the first nonexistant element, returns null otherwise
-  if (beam != null){
+  beam = new beams(player.id);
+  console.log("beam id:", beam.id);
+  console.log("owner id:", beam.owner_id);
+  if (beam.sprite != null){
     var x;
     var y;
     var x_velocity;
@@ -137,38 +208,59 @@ function shoot(){
       y = player.sprite.y;
       x_velocity = 0;
       y_velocity = -250
-      beam.reset(x, y);
-      beam.body.velocity.y = y_velocity;
+      beam.sprite.reset(x, y);
+      beam.sprite.body.velocity.y = y_velocity;
     } else if (player.direction == "down"){
       x = player.sprite.x + 10;
       y = player.sprite.y + 30;
       x_velocity = 0;
       y_velocity = 250
-      beam.reset(x, y);
-      beam.body.velocity.y = y_velocity;
+      beam.sprite.reset(x, y);
+      beam.sprite.body.velocity.y = y_velocity;
     } else if (player.direction == "left"){
       x = player.sprite.x;
       y = player.sprite.y + 10;
       x_velocity = -250;
       y_velocity = 0;
-      beam.reset(x, y);
-      beam.body.velocity.x = -250;
+      beam.sprite.reset(x, y);
+      beam.sprite.body.velocity.x = -250;
     } else {
       x = player.sprite.x + 30;
       y = player.sprite.y + 10;
       x_velocity = 250;
       y_velocity = 0;
-      beam.reset(x, y);
-      beam.body.velocity.x = 250;
+      beam.sprite.reset(x, y);
+      beam.sprite.body.velocity.x = 250;
     }
-    socket.emit('shoot', {x: x, y: y, x_velocity: x_velocity, y_velocity: y_velocity});
+    beams_list.push(beam);
+    socket.emit('shoot', {x: x, y: y, x_velocity: x_velocity, y_velocity: y_velocity, owner_id: player.id, beam_id: beam.id});
   }
 }
 
-function kill(enemy, shoot){
-  enemy.kill();
-  shoot.kill();
+function kill(enemy, beam){
+  beam_object = findbeambysprite(beam);
+  socket.emit('enemy_killed', {enemyId: findplayerbysprite(enemy).id, beam_id: beam_object.id, owner_id:beam_object.owner_id });
+  //enemy.kill();
+  beams_list.pop(findindexbeambysprite(beam));
+  enemiesGroup.remove(enemy, true);
+  beamGroup.remove(beam, true);
+}
 
+function enemy_kill(data){
+  console.log("tamanho do vetor de tiros:", beams_list.length);
+  if (data.enemyId === player.id){
+    player.sprite.reset(50,50);
+    console.log("dono da bala:", data.owner_id);
+    console.log("id da bala:", data.beam_id);
+    findbeambyid(data.owner_id, data.beam_id).sprite.kill();
+    beams_list.pop(findindexbeambysprite(findbeambyid(data.owner_id, data.beam_id).sprite));
+
+  } else {
+    findplayerbyid(data.enemyId).player.kill();
+    findbeambyid(data.owner_id, data.beam_id).sprite.kill();
+    beams_list.pop(findindexbeambysprite(findbeambyid(data.owner_id, data.beam_id).sprite));
+  }
+  console.log("tamanho do vetor de tiros depois:", beams_list.length);
 }
 
 // add the
@@ -193,12 +285,17 @@ main.prototype = {
     beamGroup.createMultiple(5, 'beam');
     beamGroup.setAll('outOfBoundsKill', true);
     beamGroup.setAll('checkWorldBounds', true);
+
     enemyBeamGroup = game.add.group();
     enemyBeamGroup.enableBody = true;
     enemyBeamGroup.physicsBodyType = Phaser.Physics.ARCADE;
     enemyBeamGroup.createMultiple(50, 'beam');
     enemyBeamGroup.setAll('outOfBoundsKill', true);
     enemyBeamGroup.setAll('checkWorldBounds', true);
+
+    enemiesGroup = game.add.group();
+    enemiesGroup.enableBody = true;
+    enemiesGroup.physicsBodyType = Phaser.Physics.ARCADE;
 
 
 
@@ -217,6 +314,8 @@ main.prototype = {
     socket.on("remove_player", onRemovePlayer);
 
     socket.on("enemy_shoot", enemy_shoot);
+
+    socket.on("enemy_kill", enemy_kill);
 
 
 	},
@@ -271,7 +370,7 @@ main.prototype = {
         console.log(spacebar.onDown);
         shoot();
       }*/
-      //game.physics.arcade.overlap(enemies[0].player, beamGroup, kill, null, this);
+      game.physics.arcade.overlap(enemiesGroup, beamGroup, kill);
       socket.emit('move_player', {x: player.sprite.x, y: player.sprite.y, direction: player.direction});
     }
 

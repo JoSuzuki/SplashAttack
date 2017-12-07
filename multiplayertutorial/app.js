@@ -100,10 +100,16 @@ function onShoot(data){
 		x: data.x,
 		y: data.y,
 		x_velocity: data.x_velocity,
-		y_velocity: data.y_velocity
+		y_velocity: data.y_velocity,
+		owner_id: data.owner_id,
+		beam_id: data.beam_id
 	}
 
 	this.broadcast.emit('enemy_shoot', enemy_shoot);
+}
+
+function onEnemyKill(data){
+	this.broadcast.emit('enemy_kill', data)
 }
 
 function find_playerid(id) {
@@ -125,7 +131,7 @@ io.sockets.on('connection', function(socket){
 
 	console.log("socket connected");
 	socket.on("first_connection", function(){
-		socket.emit('first_connection', {});
+		socket.emit('first_connection', {id: this.id});
 		console.log("server sent connect");
 	});
 
@@ -138,5 +144,7 @@ io.sockets.on('connection', function(socket){
   socket.on("new_player", onNewPlayer);
 
 	socket.on("shoot", onShoot);
+
+	socket.on("enemy_killed", onEnemyKill);
 
 });
