@@ -183,17 +183,17 @@ function fire() {
 }
 
 function render() {
-	total = floor.total-wall.total;
+	total = floor.total;
 	var porcentagem = p1/total*100;
 	if(timer.running) {
 		//game.debug.text('Time until event: ' + timer.duration.toFixed(0), 32, 32, 'rgb(255,255,255)');
 		game.debug.text(formatTime(Math.round((tempo.delay - timer.ms) / 1000)), 2, 14, 'rgb(255,255,255)');	
 	}
 	else {
-		game.debug.text('FINALE!', 32, 32, 'rgb(255,255,255)');
+		game.debug.text('FINALE!', 2, 14, 'rgb(255,255,255)');
 	}
 	
-	game.debug.text('Num de chão: '+ porcentagem+'%', 64, 64, 'rgb(255,255,255)');
+	game.debug.text('Porcentagem preenchida: '+ porcentagem+'%', 2, 28, 'rgb(255,255,255)');
 	//game.debug.text('Num de chão: '+ (floor.total-wall.total), 32, 32, 'rgb(255,255,255)');
 }
 
@@ -202,10 +202,17 @@ function resetbullet(bullet) {
 }
 
 function Paint(floor, bullet) {
-	floor.tint = bullet.tint;
+	if(timer.running) {
+		floor.tint = bullet.tint;	
+	}
+	
 }
 
 function DeadEnd(wall, bullet) {
+	if(timer.running) {
+		wall.tint = bullet.tint;
+	}
+	
 	bullet.kill();
 }
 
