@@ -112,6 +112,11 @@ function onShoot(data){
 	this.broadcast.emit('enemy_shoot', enemy_shoot);
 }
 
+function startGameBroadcast(){
+	this.emit('start_game', {});
+	this.broadcast.emit('start_game', {});
+}
+
 function onEnemyKill(data){
 	this.broadcast.emit('enemy_kill', data)
 }
@@ -155,5 +160,7 @@ io.sockets.on('connection', function(socket){
 	socket.on("enemy_killed", onEnemyKill);
 
 	socket.on('beam_removed', onBeamRemoval);
+
+	socket.on('start_game', startGameBroadcast);
 
 });

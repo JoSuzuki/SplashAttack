@@ -22,6 +22,7 @@ var cursors;
 var spacebar;
 var s_key;
 var beamGroup;
+var start = false;
 
 var floor;
 var wall;
@@ -281,25 +282,63 @@ function beam_removal(data){
 
 }
 
-function borderline(wall){
-  for(var i = 0; i < horizontal; i++){
-    var block = wall.create(i*50, 0, 'wall');
-    block.body.immovable = true;
-    block = wall.create(i*50, game.world.height - 50, 'wall');
-    block.body.immovable = true;
-  }
-  for (var i = 1; i < vertical-1; i++) {
+function borderline(wall) {
+	for (var i = 0; i < horizontal; i++) {		// bordas superior e inferior
+		var block = wall.create(i*50, 0, 'wall');
+		block.body.immovable = true;
+		block = wall.create(i*50, game.world.height-50, 'wall');
+		block.body.immovable = true;
+	}
+	for (var i = 1; i < vertical-1; i++) {		//bordas esquerda e direita
 		var block = wall.create(0, i*50, 'wall');
 		block.body.immovable = true;
 		block = wall.create(game.world.width-50, i*50, 'wall');
 		block.body.immovable = true;
 	}
+	for (var i = 0; i < 13; i++) {				// grandes barras verticas
+		var block = wall.create(200, 150+i*50, 'wall');
+		block.body.immovable = true;
+		block = wall.create(game.world.width-250, 150+i*50, 'wall');
+		block.body.immovable = true;
+	}
+	for (var i = 0; i < 3; i++) {				// quadrados 3x3
+		for (var j = 0; j < 3; j++) {
+			var block = wall.create(400+50*i, 250+j*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(game.world.width-550+50*i, 250+j*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(400+50*i, 550+j*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(game.world.width-550+50*i, 550+j*50, 'wall');
+			block.body.immovable = true;
+		}
+	}
+	for (var i = 0; i < 7; i++) {				// grandes barras verticas
+		var block = wall.create(650, 300+i*50, 'wall');
+		block.body.immovable = true;
+		block = wall.create(game.world.width-700, 300+i*50, 'wall');
+		block.body.immovable = true;
+		if(i == 3) {
+			block = wall.create(700, 300+i*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(750, 300+i*50, 'wall');
+			block.body.immovable = true;
+		}
+	}
 }
 
 
 function Paint(floor, beam) {
-	floor.tint = beam.tint;
+  if(timer.running){
+    floor.tint = beam.tint;
+  }
 
+}
+
+function formatTime(s) {
+	var minutes = "0" + Math.floor(s / 60);
+    var seconds = "0" + (s - minutes * 60);
+    return minutes.substr(-2) + ":" + seconds.substr(-2);
 }
 
 function DeadEnd(wall, beam) {
@@ -311,8 +350,13 @@ function DeadEnd(wall, beam) {
     beam.kill();
     console.log("tiro deletado", beams_list);
   }
-
 }
+
+function end() {
+	timer.stop();
+}
+
+
 function score(floor) {
 	if(floor.tint == player.tint) {
 		p1 += 1;
@@ -322,6 +366,15 @@ function score(floor) {
 function updateScore(floor) {
 	p1 = 0;
 	floor.forEach(score, this, true);
+}
+
+function start_game(){
+  start = true;
+  timer.start();
+}
+
+function emitStartGame(){
+  socket.emit('start_game', {});
 }
 
 // add the
@@ -377,13 +430,15 @@ main.prototype = {
 
     timer = game.time.create(false);
 
+    tempo = timer.add(Phaser.Timer.MINUTE * 3 + Phaser.Timer.SECOND * 00, end, this);
+
+
 
     //  Set a TimerEvent to occur after 30 seconds
     timer.loop(500, updateScore, this, floor);
 
     //  Start the timer running - this is important!
     //  It won't start automatically, allowing you to hook it to button events and the like.
-    timer.start();
 
 
 
@@ -407,6 +462,8 @@ main.prototype = {
 
     socket.on("beam_removal", beam_removal);
 
+    socket.on("start_game", start_game);
+
 	},
   update: function() {
     if(!player_created){
@@ -416,66 +473,79 @@ main.prototype = {
     }
 
     if(gameProperties.in_game){
-      game.physics.arcade.collide(player.sprite, wall);
+
+      if(start == false){
+        if(s_key.isDown){
+          emitStartGame();
+        }
+      } else {
+        game.physics.arcade.collide(player.sprite, wall);
 
 
 
-      if((cursors.left.isDown) || (cursors.right.isDown) || (cursors.up.isDown) || (cursors.down.isDown)) {
-    		if(cursors.left.isDown) {
-    			player.sprite.body.velocity.x = -230;
-          player.direction = "left";
-    			player.sprite.animations.play('left');
-    		}
+        if((cursors.left.isDown) || (cursors.right.isDown) || (cursors.up.isDown) || (cursors.down.isDown)) {
+      		if(cursors.left.isDown) {
+      			player.sprite.body.velocity.x = -230;
+            player.direction = "left";
+      			player.sprite.animations.play('left');
+      		}
 
-    		else if(cursors.right.isDown) {
-    			player.sprite.body.velocity.x = 230;
-          player.direction = "right";
-    			player.sprite.animations.play('right');
-    		}
+      		else if(cursors.right.isDown) {
+      			player.sprite.body.velocity.x = 230;
+            player.direction = "right";
+      			player.sprite.animations.play('right');
+      		}
 
-    		else {
-    			player.sprite.body.velocity.x = 0;
-    		}
+      		else {
+      			player.sprite.body.velocity.x = 0;
+      		}
 
-    		if(cursors.up.isDown) {
-    			player.sprite.body.velocity.y = -230;
-          player.direction = "up";
-    			player.sprite.animations.play('up');
-    		}
+      		if(cursors.up.isDown) {
+      			player.sprite.body.velocity.y = -230;
+            player.direction = "up";
+      			player.sprite.animations.play('up');
+      		}
 
-    		else if(cursors.down.isDown) {
-    			player.sprite.body.velocity.y = 230;
-          player.direction = "down";
-    			player.sprite.animations.play('down');
-    		}
+      		else if(cursors.down.isDown) {
+      			player.sprite.body.velocity.y = 230;
+            player.direction = "down";
+      			player.sprite.animations.play('down');
+      		}
 
-    		else {
-    			player.sprite.body.velocity.y = 0;
-    		}
-    	}
+      		else {
+      			player.sprite.body.velocity.y = 0;
+      		}
+      	}
 
-    	else {
-    		player.sprite.body.velocity.x = 0;
-    		player.sprite.body.velocity.y = 0;
-    		player.sprite.animations.stop();
-    	}
-      /*if(spacebar.onDown){
-        console.log(spacebar.onDown);
-        shoot();
-      }*/
-      game.physics.arcade.overlap(enemiesGroup, beamGroup, kill);
-      game.physics.arcade.overlap(floor, beamGroup, Paint);
-      game.physics.arcade.overlap(floor, enemyBeamGroup, Paint);
-      game.physics.arcade.overlap(wall, beamGroup, DeadEnd);
-      game.physics.arcade.overlap(wall, beamGroup, Paint);
-      socket.emit('move_player', {x: player.sprite.x, y: player.sprite.y, direction: player.direction});
+      	else {
+      		player.sprite.body.velocity.x = 0;
+      		player.sprite.body.velocity.y = 0;
+      		player.sprite.animations.stop();
+      	}
+        /*if(spacebar.onDown){
+          console.log(spacebar.onDown);
+          shoot();
+        }*/
+        game.physics.arcade.overlap(enemiesGroup, beamGroup, kill);
+        game.physics.arcade.overlap(floor, beamGroup, Paint);
+        game.physics.arcade.overlap(floor, enemyBeamGroup, Paint);
+        game.physics.arcade.overlap(wall, beamGroup, DeadEnd);
+        game.physics.arcade.overlap(wall, beamGroup, Paint);
+        socket.emit('move_player', {x: player.sprite.x, y: player.sprite.y, direction: player.direction});
+      }
     }
 
   },
   render: function() {
     total = floor.total;
   	var percentage = p1/total*100;
-
+    if(timer.running) {
+  		//game.debug.text('Time until event: ' + timer.duration.toFixed(0), 32, 32, 'rgb(255,255,255)');
+  		game.debug.text(formatTime(Math.round((tempo.delay - timer.ms) / 1000)), 2, 14, 'rgb(255,255,255)');
+  	}
+  	else {
+  		game.debug.text('FINALE! Press S to restart', 2, 14, 'rgb(255,255,255)');
+  	}
 
   	game.debug.text('Percentage filled: '+percentage+'%', 2, 28, 'rgb(255,255,255)');
   	//game.debug.text('Num de chão: '+ (floor.total-wall.total), 32, 32, 'rgb(255,255,255)');
