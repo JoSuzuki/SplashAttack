@@ -21,7 +21,7 @@ var tempo;
 var timer;
 
 function preload() {
-	game.load.image('shot', 'pics/shoot.png');
+	game.load.image('shot', 'pics/shot.png');
 	game.load.spritesheet('lapras', 'pics/shiny.png', 40, 40);
 	game.load.image('floor', 'pics/floor.png');
     game.load.image('wall', 'pics/wall.png');
@@ -98,12 +98,12 @@ function update() {
 	if((cursors.left.isDown) || (cursors.right.isDown) || (cursors.up.isDown) || (cursors.down.isDown)) {
 
 		if(cursors.left.isDown) {
-			player.body.velocity.x = -150;
+			player.body.velocity.x = -230;
 			player.animations.play('left');
 		}
 
 		else if(cursors.right.isDown) {
-			player.body.velocity.x = 150;
+			player.body.velocity.x = 230;
 			player.animations.play('right');
 		}
 
@@ -112,12 +112,12 @@ function update() {
 		}
 
 		if(cursors.up.isDown) {
-			player.body.velocity.y = -150;
+			player.body.velocity.y = -230;
 			player.animations.play('up');
 		}
 
 		else if(cursors.down.isDown) {
-			player.body.velocity.y = 150;
+			player.body.velocity.y = 230;
 			player.animations.play('down');
 		}
 
@@ -148,7 +148,7 @@ function fire() {
 	if(game.time.now > lim) {
 		bullet = municao.getFirstExists(false);
 		//game.add.text(0, 0, 'frame = '+bullet.tint);
-		bullet.tint = 0xff6b99;
+		bullet.tint = 0xA0775F;
 
 		if(bullet) {
 			if((player.animations.currentFrame.index == 0) || (player.animations.currentFrame.index == 1) || (player.animations.currentFrame.index == 2)) { //cima
@@ -225,17 +225,47 @@ function pontuacao(floor) {
 
 
 function borderline(wall) {
-	for (var i = 0; i < horizontal; i++) {
+	for (var i = 0; i < horizontal; i++) {		// bordas superior e inferior
 		var block = wall.create(i*50, 0, 'wall');
 		block.body.immovable = true;
 		block = wall.create(i*50, game.world.height-50, 'wall');
 		block.body.immovable = true;
 	}
-	for (var i = 1; i < vertical-1; i++) {
+	for (var i = 1; i < vertical-1; i++) {		//bordas esquerda e direita
 		var block = wall.create(0, i*50, 'wall');
 		block.body.immovable = true;
 		block = wall.create(game.world.width-50, i*50, 'wall');
 		block.body.immovable = true;
+	}
+	for (var i = 0; i < 13; i++) {				// grandes barras verticas
+		var block = wall.create(200, 150+i*50, 'wall');
+		block.body.immovable = true;
+		block = wall.create(game.world.width-250, 150+i*50, 'wall');
+		block.body.immovable = true;
+	}
+	for (var i = 0; i < 3; i++) {				// quadrados 3x3
+		for (var j = 0; j < 3; j++) {
+			var block = wall.create(400+50*i, 250+j*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(game.world.width-550+50*i, 250+j*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(400+50*i, 550+j*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(game.world.width-550+50*i, 550+j*50, 'wall');
+			block.body.immovable = true;
+		}
+	}
+	for (var i = 0; i < 7; i++) {				// grandes barras verticas
+		var block = wall.create(650, 300+i*50, 'wall');
+		block.body.immovable = true;
+		block = wall.create(game.world.width-700, 300+i*50, 'wall');
+		block.body.immovable = true;
+		if(i == 3) {
+			block = wall.create(700, 300+i*50, 'wall');
+			block.body.immovable = true;
+			block = wall.create(750, 300+i*50, 'wall');
+			block.body.immovable = true;
+		}
 	}
 }
 
