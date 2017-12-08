@@ -24,14 +24,15 @@ console.log("Server started.");
 var player_lst = [];
 
 //creates class player
-var Player = function(startX, startY, startAngle){
+var Player = function(startX, startY, startDirection, tint){
   this.x = startX
   this.y = startY
-  this.angle = startAngle
+  this.direction = startDirection
+	this.tint = tint
 }
 
 function onNewPlayer(data) {
-  var newPlayer = new Player(data.x, data.y, data.direction);
+  var newPlayer = new Player(data.x, data.y, data.direction, data.tint);
   console.log("Created new player with id " + this.id);
 	newPlayer.id = this.id;
 	console.log("newPlayer.id = " + newPlayer.id);
@@ -41,6 +42,7 @@ function onNewPlayer(data) {
 		x: newPlayer.x,
 		y: newPlayer.y,
 		direction: newPlayer.direction,
+		tint: newPlayer.tint
 	};
 
 	// send to the new player about everyone who is already connected
@@ -51,6 +53,7 @@ function onNewPlayer(data) {
 			x: existingPlayer.x,
 			y: existingPlayer.y,
 			direction: existingPlayer.direction,
+			tint: existingPlayer.tint
 		};
 		console.log("pushing player with id "+existingPlayer.id);
 		//send message to the sender-client only
@@ -102,7 +105,8 @@ function onShoot(data){
 		x_velocity: data.x_velocity,
 		y_velocity: data.y_velocity,
 		owner_id: data.owner_id,
-		beam_id: data.beam_id
+		beam_id: data.beam_id,
+		tint: data.tint,
 	}
 
 	this.broadcast.emit('enemy_shoot', enemy_shoot);
@@ -110,6 +114,9 @@ function onShoot(data){
 
 function onEnemyKill(data){
 	this.broadcast.emit('enemy_kill', data)
+}
+function onBeamRemoval(data){
+	this.broadcast.emit('beam_removal', data)
 }
 
 function find_playerid(id) {
@@ -146,5 +153,7 @@ io.sockets.on('connection', function(socket){
 	socket.on("shoot", onShoot);
 
 	socket.on("enemy_killed", onEnemyKill);
+
+	socket.on('beam_removed', onBeamRemoval);
 
 });

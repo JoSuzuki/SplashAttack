@@ -35,18 +35,18 @@ function create() {
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 
 	//the floor is lava
-    floor = game.add.group();
-    floor.enableBody = true;
-    floor.physicsBodyType = Phaser.Physics.ARCADE;
-    floor.createMultiple(570, 'floor', [0], true);
-    floor.align(30, 19, 50, 50);
+  floor = game.add.group();
+  floor.enableBody = true;
+  floor.physicsBodyType = Phaser.Physics.ARCADE;
+  floor.createMultiple(570, 'floor', [0], true);
+  floor.align(30, 19, 50, 50);
 
-    //wall·e
-    wall = game.add.group();
-    wall.enableBody = true;
-    wall.physicsBodyType = Phaser.Physics.ARCADE;
-    
-    borderline(wall);
+  //wall·e
+  wall = game.add.group();
+  wall.enableBody = true;
+  wall.physicsBodyType = Phaser.Physics.ARCADE;
+
+  borderline(wall);
 
 
 
@@ -67,7 +67,7 @@ function create() {
 
 	municao = game.add.group();
 	municao.enableBody = true;
-    municao.physicsBodyType = Phaser.Physics.ARCADE;
+  municao.physicsBodyType = Phaser.Physics.ARCADE;
 	municao.createMultiple(30, 'shot');
 	municao.setAll('outOfBoundsKill', true);
 	municao.setAll('checkWorldBounds', true);
@@ -96,41 +96,41 @@ function update() {
 	game.physics.arcade.collide(player, wall);
 
 	if((cursors.left.isDown) || (cursors.right.isDown) || (cursors.up.isDown) || (cursors.down.isDown)) {
-		
+
 		if(cursors.left.isDown) {
 			player.body.velocity.x = -150;
 			player.animations.play('left');
 		}
-	
+
 		else if(cursors.right.isDown) {
 			player.body.velocity.x = 150;
 			player.animations.play('right');
 		}
-	
+
 		else {
 			player.body.velocity.x = 0;
 		}
-	
+
 		if(cursors.up.isDown) {
 			player.body.velocity.y = -150;
 			player.animations.play('up');
 		}
-	
+
 		else if(cursors.down.isDown) {
 			player.body.velocity.y = 150;
 			player.animations.play('down');
 		}
-	
+
 		else {
-			player.body.velocity.y = 0;			
+			player.body.velocity.y = 0;
 		}
 	}
 
 	else {
 		player.body.velocity.x = 0;
 		player.body.velocity.y = 0;
-		player.animations.stop();	
-		
+		player.animations.stop();
+
 	}
 
 	if(shoot.isDown) {
@@ -140,11 +140,11 @@ function update() {
 	game.physics.arcade.overlap(floor, municao, Paint, null, this);
 	game.physics.arcade.overlap(wall, municao, DeadEnd, null, this);
 
-	
+
 }
 
 function fire() {
-	
+
 	if(game.time.now > lim) {
 		bullet = municao.getFirstExists(false);
 		//game.add.text(0, 0, 'frame = '+bullet.tint);
@@ -175,7 +175,7 @@ function fire() {
 				bullet.body.velocity.x = -250;
 				bullet.body.velocity.y = 0;
 			}
-			
+
 			lim = game.time.now + 750;
 		}
 	}
@@ -187,12 +187,12 @@ function render() {
 	var porcentagem = p1/total*100;
 	if(timer.running) {
 		//game.debug.text('Time until event: ' + timer.duration.toFixed(0), 32, 32, 'rgb(255,255,255)');
-		game.debug.text(formatTime(Math.round((tempo.delay - timer.ms) / 1000)), 2, 14, 'rgb(255,255,255)');	
+		game.debug.text(formatTime(Math.round((tempo.delay - timer.ms) / 1000)), 2, 14, 'rgb(255,255,255)');
 	}
 	else {
 		game.debug.text('FINALE!', 2, 14, 'rgb(255,255,255)');
 	}
-	
+
 	game.debug.text('Porcentagem preenchida: '+ porcentagem+'%', 2, 28, 'rgb(255,255,255)');
 	//game.debug.text('Num de chão: '+ (floor.total-wall.total), 32, 32, 'rgb(255,255,255)');
 }
@@ -203,23 +203,23 @@ function resetbullet(bullet) {
 
 function Paint(floor, bullet) {
 	if(timer.running) {
-		floor.tint = bullet.tint;	
+		floor.tint = bullet.tint;
 	}
-	
+
 }
 
 function DeadEnd(wall, bullet) {
 	if(timer.running) {
 		wall.tint = bullet.tint;
 	}
-	
+
 	bullet.kill();
 }
 
 function pontuacao(floor) {
 
 	if(floor.tint == 0xff6b99) {
-		p1 += 1; 
+		p1 += 1;
 	}
 }
 
@@ -251,5 +251,5 @@ function dasEnde() {
 function formatTime(s) {
 	var minutes = "0" + Math.floor(s / 60);
     var seconds = "0" + (s - minutes * 60);
-    return minutes.substr(-2) + ":" + seconds.substr(-2); 
+    return minutes.substr(-2) + ":" + seconds.substr(-2);
 }
