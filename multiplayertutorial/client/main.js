@@ -64,6 +64,7 @@ var main_player = function(data){
 	this.sprite.animations.add('right', [3, 4, 5], 10, true);
 	this.sprite.animations.add('up', [0, 1, 2], 10, true);
 	this.sprite.animations.add('down', [6, 7, 8], 10, true);
+  this.sprite.tint = this.tint;
 }
 //class remote_player
 var remote_player = function(id, startx, starty, startDirection, tint){
@@ -76,6 +77,7 @@ var remote_player = function(id, startx, starty, startDirection, tint){
 	this.player.animations.add('right', [3, 4, 5], 10, true);
 	this.player.animations.add('up', [0, 1, 2], 10, true);
 	this.player.animations.add('down', [6, 7, 8], 10, true);
+  this.player.tint = tint;
 }
 //class beams
 var beams = function(owner_id){
@@ -474,12 +476,19 @@ main.prototype = {
 
     if(gameProperties.in_game){
 
+      game.physics.arcade.collide(player.sprite, wall);
+      game.physics.arcade.overlap(enemiesGroup, beamGroup, kill);
+      game.physics.arcade.overlap(floor, beamGroup, Paint);
+      game.physics.arcade.overlap(floor, enemyBeamGroup, Paint);
+      game.physics.arcade.overlap(wall, beamGroup, DeadEnd);
+      game.physics.arcade.overlap(wall, beamGroup, Paint);
+
+
       if(start == false){
         if(s_key.isDown){
           emitStartGame();
         }
       } else {
-        game.physics.arcade.collide(player.sprite, wall);
 
 
 
@@ -526,11 +535,7 @@ main.prototype = {
           console.log(spacebar.onDown);
           shoot();
         }*/
-        game.physics.arcade.overlap(enemiesGroup, beamGroup, kill);
-        game.physics.arcade.overlap(floor, beamGroup, Paint);
-        game.physics.arcade.overlap(floor, enemyBeamGroup, Paint);
-        game.physics.arcade.overlap(wall, beamGroup, DeadEnd);
-        game.physics.arcade.overlap(wall, beamGroup, Paint);
+
         socket.emit('move_player', {x: player.sprite.x, y: player.sprite.y, direction: player.direction});
       }
     }
@@ -544,7 +549,7 @@ main.prototype = {
   		game.debug.text(formatTime(Math.round((tempo.delay - timer.ms) / 1000)), 2, 14, 'rgb(255,255,255)');
   	}
   	else {
-  		game.debug.text('FINALE! Press S to restart', 2, 14, 'rgb(255,255,255)');
+  		game.debug.text('FINALE! Press S to Start', 2, 14, 'rgb(255,255,255)');
   	}
 
   	game.debug.text('Percentage filled: '+percentage+'%', 2, 28, 'rgb(255,255,255)');
